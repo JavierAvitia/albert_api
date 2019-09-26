@@ -1,0 +1,199 @@
+from django.shortcuts import render
+from django.http import HttpResponse,JsonResponse
+
+#
+# Helper Dicts
+#
+major_industry_dict = {
+	1:'Airlines (Diners Club enRoute)',
+	2:'Airlines (Diners Club enRoute)',
+	3:"Travel & Entertainment (non-banks such as American Express, Diner's Club, JCB, and Carte Blanche)",
+	4:'Banking & Financial (Visa, Switch, and Electron)',
+	5:'Banking & Financial (Mastercard and Bankcard)',
+	6:'Merchandising & Finance (Discover Card, Laser, Solo, Switch, and China UnionPay)',
+	7:'Petroleum',
+	8:'Telecommunications',
+	9:'National Assignment',
+}
+
+#
+# Defaults
+#
+def albert_home(request):
+    return HttpResponse("Hello! Welcome to the Albert Credit Card API.")
+
+def redirect_404(request,exception):
+	return HttpResponse("Sorry! Your request was invalid. Please try again.")
+
+def redirect_500(request):
+	return HttpResponse("Zoinks! It appears the server timed out. Please check your internet connection or try again.")
+
+#
+# Helper Functions
+#
+def validate_cc_len(cc,return_string=False):
+
+	# Check for string flag & construct CC# comparison list
+	cc_list =  [d for d in str(cc)]
+
+	# Verify CC# length
+	if len(cc_list) < 6 or len(cc_list) > 19:
+		return []
+	else:
+		return cc_list
+
+#
+# Views
+#
+def validate_cc(request,cc_num=None,function_flag=False):
+
+	# Confirm number is passed
+	assert cc_num is not None
+
+	# Check variables
+	valid_flag = True
+	num_list = validate_cc_len(cc_num)
+
+	# Confirm valid credit card #
+	if not num_list:
+		valid_flag = False
+
+	else:
+
+		# Luhn Mod-10 validation variables
+		slice_idx = len(num_list) - 1
+		check_digit = num_list[slice_idx:][0]
+		num_slice = num_list[:slice_idx]
+		num_slice.reverse()
+		cc_even = []
+		cc_odd = []
+
+		# Calculate comparison sum
+		for idx,num in enumerate(num_slice):
+
+			# Convert to integer
+			num = int(num)
+
+			# Check position
+			if idx % 2 == 0:
+				n = num * 2
+				tmp_list = [int(d) for d in str(n)]
+
+				if len(tmp_list) > 1:
+					n = sum(tmp_list)
+
+				cc_even.append(n)
+			else:
+				cc_odd.append(num)
+		cc_sum = sum(cc_even + cc_odd)
+
+		# Calculate verification variable
+		m_10 = cc_sum % 10
+		m_10_10 = m_10 % 10
+		sub_10 = 10 - m_10_10
+
+		# Compare to Check Digit
+		if int(sub_10) != int(check_digit):
+			valid_flag = False
+
+	# Return response
+	if not valid_flag:
+		res_dict = {'valid_cc':'false'}
+	else:
+		res_dict = {'valid_cc':'true'}
+
+	# Check for function flag & return response
+	if function_flag:
+		return num_list, res_dict
+	else:
+		return JsonResponse(res_dict)
+
+def get_mii(request,cc_num=None):
+
+	assert cc_num is not None
+
+	# Check variables
+	valid_flag = True
+	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+
+	# Confirm valid credit card #
+	if not num_list:
+		valid_flag = False
+	elif valid_check_dict['valid_cc'] != 'true':
+		valid_flag = False
+	else:
+		mii = num_list[:1][0]
+
+	# Return response
+	if not valid_flag:
+		return JsonResponse(valid_check_dict)
+	else:
+		return JsonResponse({'mii':mii,'major_industry':major_industry_dict[int(mii)]})
+
+def get_iin(request,cc_num=None):
+
+	assert cc_num is not None
+
+	# Check variables
+	valid_flag = True
+	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+
+	# Confirm valid credit card
+	if not num_list:
+		valid_flag = False
+	elif valid_check_dict['valid_cc'] != 'true':
+		valid_flag = False
+	else:
+		iin = ''.join(num_list[:6])
+
+	# Return response
+	if not valid_flag:
+		return JsonResponse(valid_check_dict)
+	else:
+		return JsonResponse({'iin':iin})
+
+def get_account_number(request,cc_num=None):
+
+	assert cc_num is not None
+
+	# Check variables
+	valid_flag = True
+	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+
+	# Confirm valid credit card #
+	if not num_list:
+		valid_flag = False
+	elif valid_check_dict['valid_cc'] != 'true':
+		valid_flag = False
+	else:
+		slice_idx = len(num_list) - 1
+		account_number = ''.join(num_list[6:slice_idx])
+
+	# Return response
+	if not valid_flag:
+		return JsonResponse(valid_check_dict)
+	else:
+		return JsonResponse({'account_number':account_number})
+
+def get_check_digit(request,cc_num=None):
+
+	assert cc_num is not None
+
+	# Check variables
+	valid_flag = True
+	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+
+	# Confirm valid credit card #
+	if not num_list:
+		valid_flag = False
+	elif valid_check_dict['valid_cc'] != 'true':
+		valid_flag = False
+	else:
+		slice_idx = len(num_list) - 1
+		check_digit = num_list[slice_idx:][0]
+
+	# Return response
+	if not valid_flag:
+		return JsonResponse(valid_check_dict)
+	else:
+		return JsonResponse({'check_digit':check_digit})
