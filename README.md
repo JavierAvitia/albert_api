@@ -15,7 +15,7 @@
 6. The app is now running on **[Port 8080][8080]**
 
 ## Usage
-This app is set up to accept a single credit card number using a POST request with the variable 'cc_num'. It is recommended you download and use **[Postman]][post]** to make these POST requests. Some important things to note are:
+This app is set up to accept a single credit card number using a POST request with the variable 'cc_num'. It is recommended you download and use **[Postman][post]** to make these POST requests. Some important things to note are:
 	- Endpoints will NOT work for normal GET requests from a browser.
 	- This API is for testing ONLY as CSRF Tokens have been disabled in the Django settings
 	
