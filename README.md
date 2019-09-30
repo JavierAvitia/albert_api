@@ -16,8 +16,9 @@
 
 ## Usage
 This app is set up to accept a single credit card number using a POST request with the variable 'cc_num'. It is recommended you download and use **[Postman][post]** to make these POST requests. Some important things to note are:
-	- Endpoints will NOT work for normal GET requests from a browser.
-	- This API is for testing ONLY as CSRF Tokens have been disabled in the Django settings
+
+- Endpoints will NOT work for normal GET requests from a browser.
+- This API is for testing ONLY as CSRF Tokens have been disabled in the Django settings
 	
 ## Endpoints
 1. Validate Credit Card Number [cc_api/validate_cc][val]
