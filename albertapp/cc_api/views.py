@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse,JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 #
 # Helper Dicts
@@ -45,17 +46,25 @@ def validate_cc_len(cc,return_string=False):
 #
 # Views
 #
-def validate_cc(request,cc_num=None,function_flag=False):
+@csrf_exempt
+def validate_cc(request,function_flag=False):
 
-	# Confirm number is passed
-	assert cc_num is not None
+	# Parse POST request
+	valid_flag = True
+	met = request.method
+	cc_num = request.POST.get('cc_num',None)
 
 	# Check variables
-	valid_flag = True
 	num_list = validate_cc_len(cc_num)
 
 	# Confirm valid credit card #
-	if not num_list:
+	if met != 'POST':
+		valid_flag = False
+
+	elif not cc_num:
+		valid_flag = False
+
+	elif not num_list:
 		valid_flag = False
 
 	else:
@@ -83,17 +92,16 @@ def validate_cc(request,cc_num=None,function_flag=False):
 					n = sum(tmp_list)
 
 				cc_even.append(n)
+
 			else:
 				cc_odd.append(num)
 		cc_sum = sum(cc_even + cc_odd)
 
-		# Calculate verification variable
-		m_10 = cc_sum % 10
-		m_10_10 = m_10 % 10
-		sub_10 = 10 - m_10_10
+		# Verify Luhn Algorithm
+		test_digit = 10 - (( cc_sum % 10 ) % 10)
 
 		# Compare to Check Digit
-		if int(sub_10) != int(check_digit):
+		if int(test_digit) != int(check_digit):
 			valid_flag = False
 
 	# Return response
@@ -108,18 +116,17 @@ def validate_cc(request,cc_num=None,function_flag=False):
 	else:
 		return JsonResponse(res_dict)
 
-def get_mii(request,cc_num=None):
-
-	assert cc_num is not None
+@csrf_exempt
+def get_mii(request):
 
 	# Check variables
 	valid_flag = True
-	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+	num_list, valid_check_dict = validate_cc(request, function_flag=True)
 
 	# Confirm valid credit card #
-	if not num_list:
+	if valid_check_dict['valid_cc'] != 'true':
 		valid_flag = False
-	elif valid_check_dict['valid_cc'] != 'true':
+	elif not num_list:
 		valid_flag = False
 	else:
 		mii = num_list[:1][0]
@@ -130,18 +137,17 @@ def get_mii(request,cc_num=None):
 	else:
 		return JsonResponse({'mii':mii,'major_industry':major_industry_dict[int(mii)]})
 
-def get_iin(request,cc_num=None):
-
-	assert cc_num is not None
+@csrf_exempt
+def get_iin(request):
 
 	# Check variables
 	valid_flag = True
-	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+	num_list, valid_check_dict = validate_cc(request, function_flag=True)
 
 	# Confirm valid credit card
-	if not num_list:
+	if valid_check_dict['valid_cc'] != 'true':
 		valid_flag = False
-	elif valid_check_dict['valid_cc'] != 'true':
+	elif not num_list:
 		valid_flag = False
 	else:
 		iin = ''.join(num_list[:6])
@@ -152,18 +158,17 @@ def get_iin(request,cc_num=None):
 	else:
 		return JsonResponse({'iin':iin})
 
-def get_account_number(request,cc_num=None):
-
-	assert cc_num is not None
+@csrf_exempt
+def get_account_number(request):
 
 	# Check variables
 	valid_flag = True
-	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+	num_list, valid_check_dict = validate_cc(request, function_flag=True)
 
 	# Confirm valid credit card #
-	if not num_list:
+	if valid_check_dict['valid_cc'] != 'true':
 		valid_flag = False
-	elif valid_check_dict['valid_cc'] != 'true':
+	elif not num_list:
 		valid_flag = False
 	else:
 		slice_idx = len(num_list) - 1
@@ -175,18 +180,17 @@ def get_account_number(request,cc_num=None):
 	else:
 		return JsonResponse({'account_number':account_number})
 
-def get_check_digit(request,cc_num=None):
-
-	assert cc_num is not None
+@csrf_exempt
+def get_check_digit(request):
 
 	# Check variables
 	valid_flag = True
-	num_list, valid_check_dict = validate_cc(request, cc_num=cc_num, function_flag=True)
+	num_list, valid_check_dict = validate_cc(request, function_flag=True)
 
 	# Confirm valid credit card #
-	if not num_list:
+	if valid_check_dict['valid_cc'] != 'true':
 		valid_flag = False
-	elif valid_check_dict['valid_cc'] != 'true':
+	elif not num_list:
 		valid_flag = False
 	else:
 		slice_idx = len(num_list) - 1
