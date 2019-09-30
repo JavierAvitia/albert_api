@@ -5,13 +5,13 @@
 1. Download or Clone the repository from **[GitHub][gh]**.
 2. Once copied onto your Desktop, open up a terminal and navigate into the folder *albert_api* > *albertapp*.
 3. Execute the follow command in the terminal:
-	pip install -r requirements.txt
+	> pip install -r requirements.txt
 4. Confirm the following packages are installed by running pip freeze:
 	- Django==2.2.5
 	- pytz==2019.2
 	- sqlparse==0.3.0
 5. Execute the following to start the app:
-	python manage.py runserver 8080
+	> python manage.py runserver 8080
 6. The app is now running on **[Port 8080][8080]**
 
 ## Endpoints
